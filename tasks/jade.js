@@ -25,7 +25,8 @@ module.exports = function(grunt) {
       extension: null,
       wrap: null,
       locals: null,
-      basePath: null
+      basePath: null,
+      wrapDir: true
     };
 
     // Options object for jade
@@ -40,9 +41,14 @@ module.exports = function(grunt) {
     // Loop through all files and write them to files
     this.files.forEach(function(fileObj) {
       // Reference to the dest dir
-      var dest = path.normalize(fileObj.dest + '/');
-      // Make the dest dir if it doesn't exist
-      grunt.file.mkdir(dest);
+      var dest = fileObj.dest;
+
+      if (options.wrapDir)
+      {
+        dest = path.normalize(fileObj.dest + '/');
+        // Make the dest dir if it doesn't exist
+        grunt.file.mkdir(dest);
+      }
 
       var files = grunt.file.expand({nonull: true}, fileObj.src);
 
@@ -50,9 +56,12 @@ module.exports = function(grunt) {
         var fileExtname = path.extname(filepath);
         var outputFilename = path.basename(filepath, fileExtname);
         var outputDirectory = options.basePath ? path.dirname(path.relative(options.basePath, filepath)) + '/' : '';
-        var outputFilepath = dest + outputDirectory + outputFilename + outputExtension;
+        var outputFilepath = dest;
+        if (options.wrapDir)
+          outputFilepath = dest + outputDirectory + outputFilename + outputExtension;
         var compiled = helpers.compile(filepath, options, wrapper, outputFilename);
         grunt.file.write(outputFilepath, compiled);
+        grunt.log.writeln('File ' + outputFilepath + ' created.');
       });
 
       if(options.client && options.runtime){
